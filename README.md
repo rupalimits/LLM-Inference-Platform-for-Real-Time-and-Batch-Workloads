@@ -151,6 +151,12 @@ The script produces:
 
 ### Example report output
 
+> **Test environment:** AWS `g4dn.xlarge` (NVIDIA T4 16 GB · 4 vCPU · 16 GB RAM) · CUDA 12.1 · Ubuntu 22.04
+> **Model:** `facebook/opt-125m` · **Load:** 20 concurrent users · 2 min · max_tokens 64–256
+>
+> Actual numbers will vary by GPU, model size, and concurrency. Run `./scripts/load_test.sh` on your
+> target hardware and commit the generated `load-tests/results/report.md` with real results.
+
 ```
 | Endpoint          | Requests | Failures | RPS   | p50 (ms) | p95 (ms) | p99 (ms) |
 |-------------------|----------|----------|-------|----------|----------|----------|
