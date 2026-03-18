@@ -1,0 +1,126 @@
+{{/* ── Inference Deployment ───────────────────────────────────────────────── */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: inference
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.inference.replicas }}
+  selector:
+    matchLabels:
+      app: inference
+  template:
+    metadata:
+      labels:
+        app: inference
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.inference.metricsPort | quote }}
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: inference
+          image: "{{ .Values.inference.image }}:{{ .Values.inference.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.inference.port }}
+            - containerPort: {{ .Values.inference.metricsPort }}
+          env:
+            - name: MODEL_NAME
+              value: {{ .Values.model.name | quote }}
+            - name: TENSOR_PARALLEL_SIZE
+              value: {{ .Values.model.tensorParallelSize | quote }}
+            - name: GPU_MEMORY_UTILIZATION
+              value: {{ .Values.model.gpuMemoryUtilization | quote }}
+            - name: REDIS_URL
+              value: "redis://redis-service:6379/0"
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            {{- if .Values.hfTokenSecret }}
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.hfTokenSecret }}
+                  key: token
+            {{- end }}
+          resources:
+            {{- toYaml .Values.inference.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.inference.port }}
+            initialDelaySeconds: 120
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: {{ .Values.inference.port }}
+            initialDelaySeconds: 180
+            periodSeconds: 30
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+---
+{{/* ── Worker Deployment ──────────────────────────────────────────────────── */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.worker.metricsPort | quote }}
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.worker.image }}:{{ .Values.worker.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.worker.metricsPort }}
+          env:
+            - name: MODEL_NAME
+              value: {{ .Values.model.name | quote }}
+            - name: TENSOR_PARALLEL_SIZE
+              value: {{ .Values.model.tensorParallelSize | quote }}
+            - name: GPU_MEMORY_UTILIZATION
+              value: {{ .Values.model.gpuMemoryUtilization | quote }}
+            - name: REDIS_URL
+              value: "redis://redis-service:6379/0"
+            - name: WORKER_METRICS_PORT
+              value: {{ .Values.worker.metricsPort | quote }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule

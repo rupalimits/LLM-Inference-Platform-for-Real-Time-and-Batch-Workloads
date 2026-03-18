@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-platform-config
+  namespace: llm-platform
+data:
+  MODEL_NAME: "facebook/opt-125m"
+  TENSOR_PARALLEL_SIZE: "1"
+  GPU_MEMORY_UTILIZATION: "0.90"
+  LOG_LEVEL: "info"
+  REDIS_URL: "redis://redis-service:6379/0"
+  WORKER_METRICS_PORT: "9091"

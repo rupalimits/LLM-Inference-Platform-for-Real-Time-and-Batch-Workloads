@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-platform-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  MODEL_NAME: {{ .Values.model.name | quote }}
+  TENSOR_PARALLEL_SIZE: {{ .Values.model.tensorParallelSize | quote }}
+  GPU_MEMORY_UTILIZATION: {{ .Values.model.gpuMemoryUtilization | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  REDIS_URL: "redis://redis-service:6379/0"
+  WORKER_METRICS_PORT: {{ .Values.worker.metricsPort | quote }}

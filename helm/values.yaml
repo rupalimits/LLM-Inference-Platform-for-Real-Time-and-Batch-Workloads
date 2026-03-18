@@ -1,0 +1,68 @@
+global:
+  namespace: llm-platform
+  imagePullPolicy: IfNotPresent
+
+model:
+  name: "facebook/opt-125m"
+  tensorParallelSize: 1
+  gpuMemoryUtilization: 0.90
+
+inference:
+  image: llm-platform/inference
+  tag: latest
+  replicas: 1
+  port: 8000
+  metricsPort: 9090
+  resources:
+    requests:
+      memory: "8Gi"
+      cpu: "2"
+      nvidia.com/gpu: "1"
+    limits:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: "1"
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 4
+    cpuUtilization: 70
+
+worker:
+  image: llm-platform/worker
+  tag: latest
+  replicas: 1
+  metricsPort: 9091
+  resources:
+    requests:
+      memory: "8Gi"
+      cpu: "2"
+      nvidia.com/gpu: "1"
+    limits:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: "1"
+
+redis:
+  image: redis
+  tag: "7-alpine"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+
+hfCache:
+  storage: 50Gi
+
+hfTokenSecret: ""   # name of k8s secret containing HUGGING_FACE_HUB_TOKEN
+logLevel: info

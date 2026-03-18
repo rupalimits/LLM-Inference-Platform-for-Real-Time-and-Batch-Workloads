@@ -1,0 +1,118 @@
+{
+  "title": "LLM Inference Platform",
+  "uid": "llm-inference",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(inference_requests_total[1m])) by (endpoint)",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "p50 / p95 / p99 Latency (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(inference_request_duration_seconds_bucket[1m])) by (le, endpoint))",
+          "legendFormat": "p50 {{endpoint}}"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(inference_request_duration_seconds_bucket[1m])) by (le, endpoint))",
+          "legendFormat": "p95 {{endpoint}}"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(inference_request_duration_seconds_bucket[1m])) by (le, endpoint))",
+          "legendFormat": "p99 {{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Active Requests",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "inference_active_requests",
+          "legendFormat": "Active"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Tokens Generated / second",
+      "type": "timeseries",
+      "gridPos": { "x": 6, "y": 8, "w": 9, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(inference_tokens_generated_total[1m])) by (model)",
+          "legendFormat": "{{model}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Error Rate (5xx)",
+      "type": "timeseries",
+      "gridPos": { "x": 15, "y": 8, "w": 9, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(inference_requests_total{status_code=~\"5..\"}[1m])) by (endpoint)",
+          "legendFormat": "errors {{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Batch Jobs Submitted / min",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(batch_jobs_total[1m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Worker Batch Task Duration (p50/p95)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(worker_batch_task_duration_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(worker_batch_task_duration_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Worker Tokens Generated / second",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 18, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(worker_tokens_generated_total[1m]))",
+          "legendFormat": "tok/s"
+        }
+      ]
+    }
+  ]
+}

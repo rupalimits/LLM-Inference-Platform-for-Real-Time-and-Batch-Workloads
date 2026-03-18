@@ -1,0 +1,13 @@
+apiVersion: v2
+name: llm-inference-platform
+description: Cloud-native LLM inference platform with vLLM, async batch workers, and observability.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - llm
+  - vllm
+  - inference
+  - machine-learning
+maintainers:
+  - name: platform-team
